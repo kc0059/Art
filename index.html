@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>拾選 Select</title>
+<meta name="description" content="藝術與設計選物店，附選品評分工具。">
+<style>
+:root{
+  --bg:#f6f3ee;--surface:#fffdf9;--surface-2:#efe9df;--ink:#1d1b18;--muted:#6f6a62;--line:#e2dbd0;
+  --accent:#b4472c;--accent-ink:#ffffff;--good:#2f7a4f;--warn:#9a6a12;--bad:#b23a3a;
+  --good-bg:#e3f1e8;--warn-bg:#f6ecd6;--bad-bg:#f7e1df;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 10px 28px rgba(40,30,20,.07);
+  --serif:"Noto Serif TC","Songti TC","Source Han Serif TC","PMingLiU",serif;
+  --sans:system-ui,-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#151412;--surface:#1e1c19;--surface-2:#2a2723;--ink:#efe9e0;--muted:#a59e93;--line:#36322c;
+    --accent:#e0795c;--accent-ink:#1a1410;--good:#7cc79a;--warn:#e2b45a;--bad:#ec8a80;
+    --good-bg:#1f3227;--warn-bg:#3a2f18;--bad-bg:#3c2220;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151412;--surface:#1e1c19;--surface-2:#2a2723;--ink:#efe9e0;--muted:#a59e93;--line:#36322c;
+  --accent:#e0795c;--accent-ink:#1a1410;--good:#7cc79a;--warn:#e2b45a;--bad:#ec8a80;
+  --good-bg:#1f3227;--warn-bg:#3a2f18;--bad-bg:#3c2220;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:15px}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1160px;margin:0 auto;padding:0 16px}
+@media (min-width:720px){.wrap{padding:0 28px}}
+
+/* header */
+header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;height:60px}
+.brand{font-family:var(--serif);font-size:22px;font-weight:700;letter-spacing:.08em;text-decoration:none}
+.brand small{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--muted);margin-left:6px;font-weight:500}
+nav.tabs{margin-left:auto;display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:999px}
+nav.tabs a{text-decoration:none;padding:6px 14px;border-radius:999px;font-size:14px;color:var(--muted);white-space:nowrap}
+nav.tabs a[aria-current="page"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+/* hero */
+.hero{padding:48px 0 28px}
+.hero h1{font-family:var(--serif);font-size:clamp(28px,5vw,46px);line-height:1.25;margin:0 0 12px;font-weight:700;letter-spacing:.02em}
+.hero p{color:var(--muted);max-width:560px;margin:0}
+
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:20px 0 22px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);padding:5px 13px;border-radius:999px;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.search{flex:1 1 180px;min-width:0;display:flex;gap:8px;justify-content:flex-end}
+.input,select.input{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;min-width:0}
+.search .input{width:100%;max-width:260px}
+.input:focus,.chip:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:22px;padding-bottom:48px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;text-align:left;padding:0;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.art{aspect-ratio:4/3;display:block;width:100%;background:var(--surface-2)}
+.art svg{display:block;width:100%;height:100%}
+.card .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:4px;flex:1}
+.cat{font-size:12px;color:var(--muted);letter-spacing:.12em}
+.card h3{font-family:var(--serif);font-size:17px;margin:0;font-weight:700}
+.card .note{font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.price{font-weight:600;margin-top:auto;padding-top:6px}
+.empty{padding:48px 0;color:var(--muted);text-align:center}
+
+/* lab */
+.lab-head{padding:36px 0 8px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.lab-head h1{font-family:var(--serif);font-size:clamp(24px,4vw,34px);margin:0}
+.lab-head p{margin:2px 0 0;color:var(--muted)}
+.lab-head .actions{margin-left:auto;display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;cursor:pointer;font-size:14px;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.small{padding:4px 10px;font-size:13px}
+.btn.danger{color:var(--bad)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.kpi .k{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:18px}
+.panel h2{font-size:15px;margin:0 0 4px}
+.panel .hint{font-size:13px;color:var(--muted);margin:0 0 12px}
+.weights{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px 22px}
+.weights label{display:flex;flex-direction:column;font-size:13px;gap:2px}
+.weights .row{display:flex;justify-content:space-between}
+.weights output{font-variant-numeric:tabular-nums;color:var(--muted)}
+input[type=range]{accent-color:var(--accent);width:100%}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface);margin-bottom:12px}
+table{border-collapse:collapse;width:100%;min-width:880px;font-size:14px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:600;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td .name{font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.scorebar{display:flex;align-items:center;gap:8px}
+.scorebar .track{width:70px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.scorebar .fill{height:100%;border-radius:3px}
+.tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;font-weight:600}
+.tag.good{background:var(--good-bg);color:var(--good)}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}
+.tag.bad{background:var(--bad-bg);color:var(--bad)}
+.tag.plain{background:var(--surface-2);color:var(--muted)}
+.flag{color:var(--bad);font-size:12px;margin-left:4px}
+.ops{display:flex;gap:6px}
+.foot{color:var(--muted);font-size:13px;padding:8px 0 48px}
+
+/* dialog */
+dialog{border:0;border-radius:18px;padding:0;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.3);width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 32px)}
+dialog::backdrop{background:rgba(20,16,12,.45)}
+.dlg-body{padding:20px 22px 22px}
+.dlg-close{position:absolute;top:10px;right:10px;border:0;background:var(--surface);border-radius:999px;width:34px;height:34px;cursor:pointer;font-size:18px;box-shadow:var(--shadow)}
+.detail{display:grid;grid-template-columns:1fr;gap:0}
+@media (min-width:640px){.detail{grid-template-columns:1.1fr 1fr}.detail .art{aspect-ratio:auto;height:100%;min-height:320px}}
+.detail h2{font-family:var(--serif);margin:4px 0 8px;font-size:24px}
+.detail .quote{border-left:3px solid var(--accent);padding-left:12px;color:var(--ink);margin:14px 0}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.form label.full{grid-column:1/-1}
+.form .input{color:var(--ink)}
+.preview{grid-column:1/-1;background:var(--surface-2);border-radius:12px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px}
+.preview b{font-variant-numeric:tabular-nums}
+.dlg-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.dlg-actions .spacer{flex:1}
+@media (max-width:520px){.form{grid-template-columns:1fr}.top .brand small{display:none}}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#shop">拾選<small>SELECT</small></a>
+    <nav class="tabs" aria-label="主要">
+      <a href="#shop" data-route="shop">選物</a>
+      <a href="#lab" data-route="lab">選品室</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- Storefront -->
+  <section id="shop" class="wrap">
+    <div class="hero">
+      <h1>少一點，<br>但每一件都值得。</h1>
+      <p>我們從工作室、印刷廠與窯場挑回這些物件。每一件都附上挑選它的理由。</p>
+    </div>
+    <div class="controls">
+      <div class="chips" id="catChips" role="group" aria-label="分類"></div>
+      <div class="search">
+        <input class="input" id="q" type="search" placeholder="搜尋商品" aria-label="搜尋商品">
+        <select class="input" id="sort" aria-label="排序">
+          <option value="rec">推薦</option>
+          <option value="low">價格低到高</option>
+          <option value="high">價格高到低</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- Selection lab -->
+  <section id="lab" class="wrap" hidden>
+    <div class="lab-head">
+      <div>
+        <h1>選品室</h1>
+        <p>輸入候選商品，依毛利、需求、競爭、契合度與風險自動評分。上架的商品會出現在選物頁。</p>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="addBtn">＋ 新增候選</button>
+        <button class="btn" id="exportBtn">匯出</button>
+        <button class="btn" id="importBtn">匯入</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+        <button class="btn" id="resetBtn">重設範例</button>
+      </div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="panel">
+      <h2>評分權重</h2>
+      <p class="hint">拖動調整各項的重要程度。分數 70 以上建議上架，50–69 先觀察，50 以下不建議。</p>
+      <div class="weights" id="weights"></div>
+    </div>
+
+    <div class="controls">
+      <div class="chips" id="statusChips" role="group" aria-label="狀態"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>商品</th><th>分類</th><th class="num">成本</th><th class="num">售價</th><th class="num">毛利率</th>
+          <th class="num">月銷量</th><th class="num">預估月利潤</th><th>選品分數</th><th>建議</th><th>狀態</th><th>操作</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="foot">資料只存在這個瀏覽器裡。換電腦或清除瀏覽器資料前，請先用「匯出」備份。</p>
+  </section>
+</main>
+
+<!-- Product detail -->
+<dialog id="detailDlg" aria-label="商品詳情">
+  <button class="dlg-close" data-close aria-label="關閉">×</button>
+  <div id="detailBody"></div>
+</dialog>
+
+<!-- Edit form -->
+<dialog id="editDlg" aria-label="編輯候選商品">
+  <form class="dlg-body" id="editForm" method="dialog">
+    <h2 id="editTitle" style="margin:0 0 14px;font-family:var(--serif)">新增候選</h2>
+    <div class="form">
+      <label class="full">商品名稱<input class="input" name="name" required maxlength="60"></label>
+      <label>分類<input class="input" name="category" list="catList" required maxlength="20"></label>
+      <label>狀態
+        <select class="input" name="status">
+          <option value="candidate">候選</option><option value="listed">上架</option><option value="rejected">淘汰</option>
+        </select>
+      </label>
+      <label>進貨成本（NT$）<input class="input" name="cost" type="number" min="0" step="1" required></label>
+      <label>售價（NT$）<input class="input" name="price" type="number" min="0" step="1" required></label>
+      <label>預估月銷量（件）<input class="input" name="demand" type="number" min="0" step="1" required></label>
+      <label>市場競爭（1 低 – 5 高）<select class="input" name="competition"></select></label>
+      <label>品牌契合度（1 低 – 5 高）<select class="input" name="fit"></select></label>
+      <label>物流與庫存風險（1 低 – 5 高）<select class="input" name="risk"></select></label>
+      <label class="full">選物理由（會顯示在選物頁）<textarea class="input" name="note" rows="3" maxlength="300"></textarea></label>
+      <div class="preview" id="preview"></div>
+    </div>
+    <datalist id="catList"></datalist>
+    <div class="dlg-actions">
+      <button type="button" class="btn danger" id="deleteBtn">刪除</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>取消</button>
+      <button type="submit" class="btn primary" value="save">儲存</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+const KEY = 'select-shop-v1';
+const PALETTES = [
+  ['#e9dccb','#b4472c','#2d3a4a','#e3a857'],
+  ['#d9e2dc','#2f5d50','#e07a5f','#f2cc8f'],
+  ['#f1e4d3','#3d405b','#81b29a','#e07a5f'],
+  ['#e6e1f0','#5b4b8a','#f4a259','#2b2d42'],
+  ['#efe3c8','#7a5c3e','#c4583c','#26413c'],
+  ['#dfe7ee','#1f4e79','#d1495b','#edae49'],
+  ['#f3ddd5','#9c3d54','#283845','#e2b13c'],
+  ['#e4ead9','#4f6d3a','#b85c38','#2e2a24'],
+];
+const DEFAULT_WEIGHTS = {margin:30, demand:25, competition:15, fit:20, risk:10};
+const WEIGHT_LABELS = {margin:'毛利率', demand:'需求量', competition:'競爭少', fit:'品牌契合', risk:'風險低'};
+const STATUS = {candidate:'候選', listed:'上架', rejected:'淘汰'};
+const SAMPLE = [
+  {id:'s1', name:'手拉坯釉色馬克杯', category:'陶瓷', cost:280, price:880, demand:60, competition:3, fit:5, risk:3, status:'listed', pal:0,
+   note:'鶯歌一間兩人工作室的作品。每一只釉色流動都不同，握把厚實，適合每天用。'},
+  {id:'s2', name:'絹印藝術海報 A2', category:'紙品', cost:150, price:1200, demand:40, competition:2, fit:5, risk:1, status:'listed', pal:5,
+   note:'六道手工套色，紙張用 250 磅美術紙。顏色疊印的微小錯位，是機器印不出來的。'},
+  {id:'s3', name:'黃銅葉脈書籤', category:'文具', cost:90, price:450, demand:120, competition:3, fit:4, risk:1, status:'listed', pal:4,
+   note:'用久了會氧化出自己的顏色。夠薄，夾在書裡不會留下痕跡。'},
+  {id:'s4', name:'手染靛藍帆布袋', category:'織品', cost:210, price:690, demand:80, competition:4, fit:4, risk:2, status:'listed', pal:1,
+   note:'三峽藍染，十二盎司厚帆布。可以裝下一台筆電和一天的生活。'},
+  {id:'s5', name:'木刻版畫・限量 20 版', category:'版畫', cost:600, price:3800, demand:6, competition:1, fit:5, risk:2, status:'listed', pal:7,
+   note:'藝術家親手拓印並簽名編號。每一版的墨色濃淡都略有不同。'},
+  {id:'s6', name:'大豆蠟香氛蠟燭', category:'生活', cost:160, price:520, demand:150, competition:5, fit:3, risk:3, status:'candidate', pal:6,
+   note:'檜木與無花果的味道。市場上同類很多，還在觀察能不能做出差異。'},
+  {id:'s7', name:'藝術家明信片組（8 張）', category:'紙品', cost:45, price:280, demand:200, competition:4, fit:4, risk:1, status:'listed', pal:2,
+   note:'八位本地插畫家各一張。好入手的價格，是認識新創作者的第一步。'},
+  {id:'s8', name:'亞麻刺繡桌巾', category:'織品', cost:520, price:1480, demand:15, competition:3, fit:4, risk:2, status:'candidate', pal:3,
+   note:'立陶宛亞麻，邊緣手工刺繡。成本偏高，正在跟工坊談量。'},
+  {id:'s9', name:'琺瑯金屬胸針', category:'配件', cost:70, price:390, demand:90, competition:4, fit:3, risk:1, status:'candidate', pal:6,
+   note:'圖案來自館藏的抽象畫，但同類設計不少。'},
+  {id:'s10', name:'名畫 1000 片拼圖', category:'生活', cost:230, price:590, demand:50, competition:5, fit:2, risk:3, status:'rejected', pal:5,
+   note:'大型通路已經在賣同款，和我們的調性也不太合。'},
+  {id:'s11', name:'手吹玻璃小花器', category:'陶瓷', cost:380, price:1280, demand:25, competition:2, fit:5, risk:5, status:'candidate', pal:1,
+   note:'非常漂亮，但運送破損率高。要先找到可靠的包裝方式。'},
+  {id:'s12', name:'鉛筆素描練習本', category:'文具', cost:60, price:220, demand:180, competition:5, fit:2, risk:1, status:'rejected', pal:2,
+   note:'需求高，但沒有特色，價格戰打不贏。'},
+];
+
+const clone = o => JSON.parse(JSON.stringify(o));
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp = (v, a=0, b=1) => Math.min(b, Math.max(a, v));
+const money = n => 'NT$ ' + Math.round(n).toLocaleString('zh-TW');
+const pct = n => (n*100).toFixed(0) + '%';
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return null;
+    const s = JSON.parse(raw);
+    if(Array.isArray(s.items) && s.weights) return s;
+  }catch(e){}
+  return null;
+}
+let state = load() || {items: clone(SAMPLE), weights: {...DEFAULT_WEIGHTS}};
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+/* ---------- scoring ---------- */
+function metrics(it, w = state.weights){
+  const unit = it.price - it.cost;
+  const margin = it.price > 0 ? unit / it.price : 0;
+  const monthly = unit * it.demand;
+  const parts = {
+    margin: clamp((margin - 0.3) / 0.5),   // 30% 以下 = 0 分，80% 以上 = 滿分
+    demand: clamp(Math.log10(Math.max(it.demand, 1)) / 3),
+    competition: (5 - it.competition) / 4,
+    fit: (it.fit - 1) / 4,
+    risk: (5 - it.risk) / 4,
+  };
+  const total = Object.values(w).reduce((a, b) => a + b, 0) || 1;
+  let score = 0;
+  for(const k in parts) score += parts[k] * (w[k] || 0);
+  score = Math.round(score / total * 100);
+  const verdict = score >= 70 ? ['建議上架','good'] : score >= 50 ? ['觀察','warn'] : ['不建議','bad'];
+  const flags = [];
+  if(unit <= 0) flags.push('虧本');
+  else if(margin < 0.3) flags.push('毛利偏低');
+  return {unit, margin, monthly, score, verdict, flags};
+}
+const scoreColor = s => s >= 70 ? 'var(--good)' : s >= 50 ? 'var(--warn)' : 'var(--bad)';
+
+/* ---------- generated art ---------- */
+function hash(str){ let h = 2166136261; for(const c of str){ h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function art(it){
+  const pal = PALETTES[(it.pal ?? hash(it.id)) % PALETTES.length];
+  const r = rng(hash(it.id + it.name));
+  const [bg, ...cols] = pal;
+  let s = `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="300" fill="${bg}"/>`;
+  const n = 3 + Math.floor(r() * 4);
+  for(let i = 0; i < n; i++){
+    const c = cols[i % cols.length], t = r();
+    const x = r() * 400, y = r() * 300;
+    if(t < 0.38){
+      s += `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(28 + r() * 100).toFixed(0)}" fill="${c}" opacity="${(.75 + r() * .25).toFixed(2)}"/>`;
+    }else if(t < 0.68){
+      const w = 50 + r() * 160, h = 30 + r() * 120, rot = (r() * 60 - 30).toFixed(0);
+      s += `<rect x="${(x - w/2).toFixed(0)}" y="${(y - h/2).toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" fill="${c}" transform="rotate(${rot} ${x.toFixed(0)} ${y.toFixed(0)})"/>`;
+    }else{
+      const rad = 40 + r() * 90, sw = (8 + r() * 18).toFixed(0);
+      s += `<path d="M${(x - rad).toFixed(0)} ${y.toFixed(0)} A${rad.toFixed(0)} ${rad.toFixed(0)} 0 0 1 ${(x + rad).toFixed(0)} ${y.toFixed(0)}" fill="none" stroke="${c}" stroke-width="${sw}" stroke-linecap="round"/>`;
+    }
+  }
+  return s + '</svg>';
+}
+
+/* ---------- routing ---------- */
+function route(){
+  const r = location.hash === '#lab' ? 'lab' : 'shop';
+  $('#shop').hidden = r !== 'shop';
+  $('#lab').hidden = r !== 'lab';
+  document.querySelectorAll('nav.tabs a').forEach(a => {
+    if(a.dataset.route === r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+  render();
+}
+window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
+
+/* ---------- storefront ---------- */
+let shopCat = '全部';
+function renderShop(){
+  const listed = state.items.filter(i => i.status === 'listed');
+  const cats = ['全部', ...new Set(listed.map(i => i.category))];
+  if(!cats.includes(shopCat)) shopCat = '全部';
+  $('#catChips').innerHTML = cats.map(c => `<button class="chip" data-cat="${esc(c)}" aria-pressed="${c === shopCat}">${esc(c)}</button>`).join('');
+  const q = $('#q').value.trim().toLowerCase();
+  let list = listed.filter(i => (shopCat === '全部' || i.category === shopCat) &&
+    (!q || (i.name + i.category + i.note).toLowerCase().includes(q)));
+  const sort = $('#sort').value;
+  if(sort === 'low') list.sort((a, b) => a.price - b.price);
+  else if(sort === 'high') list.sort((a, b) => b.price - a.price);
+  else list.sort((a, b) => metrics(b).score - metrics(a).score);
+  $('#grid').innerHTML = list.length ? list.map(i => `
+    <button class="card" data-id="${esc(i.id)}">
+      <span class="art">${art(i)}</span>
+      <span class="body">
+        <span class="cat">${esc(i.category)}</span>
+        <h3>${esc(i.name)}</h3>
+        <span class="note">${esc(i.note)}</span>
+        <span class="price">${money(i.price)}</span>
+      </span>
+    </button>`).join('')
+    : `<p class="empty">${listed.length ? '找不到符合的商品。' : '目前沒有上架商品。到「選品室」把候選商品上架吧。'}</p>`;
+}
+$('#catChips').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if(b){ shopCat = b.dataset.cat; renderShop(); } });
+$('#q').addEventListener('input', renderShop);
+$('#sort').addEventListener('change', renderShop);
+$('#grid').addEventListener('click', e => { const c = e.target.closest('.card'); if(c) openDetail(c.dataset.id); });
+
+function openDetail(id){
+  const i = state.items.find(x => x.id === id); if(!i) return;
+  $('#detailBody').innerHTML = `
+    <div class="detail">
+      <div class="art">${art(i)}</div>
+      <div class="dlg-body">
+        <div class="cat">${esc(i.category)}</div>
+        <h2>${esc(i.name)}</h2>
+        <div class="price" style="font-size:20px">${money(i.price)}</div>
+        <p class="quote">${esc(i.note) || '—'}</p>
+        <p style="color:var(--muted);font-size:13px;margin:0">選物人筆記</p>
+      </div>
+    </div>`;
+  $('#detailDlg').showModal();
+}
+
+/* ---------- lab ---------- */
+let labFilter = 'all';
+function renderLab(){
+  const items = state.items.map(i => ({...i, m: metrics(i)}));
+  const listed = items.filter(i => i.status === 'listed');
+  const cand = items.filter(i => i.status === 'candidate');
+  const avgMargin = listed.length ? listed.reduce((a, i) => a + i.m.margin, 0) / listed.length : 0;
+  const monthly = listed.reduce((a, i) => a + i.m.monthly, 0);
+  const promote = cand.filter(i => i.m.score >= 70).length;
+  $('#kpis').innerHTML = [
+    ['上架中', listed.length + ' 件'],
+    ['候選中', cand.length + ' 件'],
+    ['上架平均毛利率', pct(avgMargin)],
+    ['上架預估月利潤', money(monthly)],
+    ['候選中達上架標準', promote + ' 件'],
+  ].map(([k, v]) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+
+  const counts = {all: items.length, candidate: cand.length, listed: listed.length, rejected: items.length - cand.length - listed.length};
+  $('#statusChips').innerHTML = [['all','全部'], ['candidate','候選'], ['listed','上架'], ['rejected','淘汰']]
+    .map(([k, l]) => `<button class="chip" data-f="${k}" aria-pressed="${k === labFilter}">${l} ${counts[k]}</button>`).join('');
+
+  const rows = items.filter(i => labFilter === 'all' || i.status === labFilter).sort((a, b) => b.m.score - a.m.score);
+  $('#rows').innerHTML = rows.length ? rows.map(i => `
+    <tr>
+      <td><span class="name" data-edit="${esc(i.id)}" tabindex="0" role="button">${esc(i.name)}</span></td>
+      <td>${esc(i.category)}</td>
+      <td class="num">${money(i.cost)}</td>
+      <td class="num">${money(i.price)}</td>
+      <td class="num">${pct(i.m.margin)}${i.m.flags.map(f => `<span class="flag">${f}</span>`).join('')}</td>
+      <td class="num">${i.demand}</td>
+      <td class="num">${money(i.m.monthly)}</td>
+      <td><div class="scorebar"><b style="width:26px;text-align:right">${i.m.score}</b><div class="track"><div class="fill" style="width:${i.m.score}%;background:${scoreColor(i.m.score)}"></div></div></div></td>
+      <td><span class="tag ${i.m.verdict[1]}">${i.m.verdict[0]}</span></td>
+      <td><span class="tag ${i.status === 'listed' ? 'good' : 'plain'}">${STATUS[i.status]}</span></td>
+      <td><div class="ops">
+        ${i.status === 'listed'
+          ? `<button class="btn small" data-act="candidate" data-id="${esc(i.id)}">下架</button>`
+          : `<button class="btn small" data-act="listed" data-id="${esc(i.id)}">上架</button>`}
+        ${i.status === 'rejected'
+          ? `<button class="btn small" data-act="candidate" data-id="${esc(i.id)}">復原</button>`
+          : `<button class="btn small" data-act="rejected" data-id="${esc(i.id)}">淘汰</button>`}
+      </div></td>
+    </tr>`).join('') : `<tr><td colspan="11" class="empty">這個分類沒有商品。</td></tr>`;
+}
+function renderWeights(){
+  $('#weights').innerHTML = Object.keys(DEFAULT_WEIGHTS).map(k => `
+    <label><span class="row"><span>${WEIGHT_LABELS[k]}</span><output id="w-${k}">${state.weights[k]}</output></span>
+    <input type="range" min="0" max="50" step="5" value="${state.weights[k]}" data-w="${k}" aria-label="${WEIGHT_LABELS[k]}權重"></label>`).join('');
+}
+$('#weights').addEventListener('input', e => {
+  const k = e.target.dataset.w; if(!k) return;
+  state.weights[k] = +e.target.value; $('#w-' + k).textContent = e.target.value;
+  save(); renderLab();
+});
+$('#statusChips').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if(b){ labFilter = b.dataset.f; renderLab(); } });
+$('#rows').addEventListener('click', e => {
+  const a = e.target.closest('[data-act]');
+  if(a){ const it = state.items.find(x => x.id === a.dataset.id); if(it){ it.status = a.dataset.act; save(); render(); } return; }
+  const n = e.target.closest('[data-edit]'); if(n) openEdit(n.dataset.edit);
+});
+$('#rows').addEventListener('keydown', e => { if((e.key === 'Enter' || e.key === ' ') && e.target.dataset.edit){ e.preventDefault(); openEdit(e.target.dataset.edit); } });
+
+/* ---------- edit dialog ---------- */
+const form = $('#editForm');
+let editingId = null;
+['competition','fit','risk'].forEach(n => { form[n].innerHTML = [1,2,3,4,5].map(v => `<option value="${v}">${v}</option>`).join(''); });
+function readForm(){
+  return {
+    name: form.name.value.trim(), category: form.category.value.trim(), status: form.status.value,
+    cost: Math.max(0, +form.cost.value || 0), price: Math.max(0, +form.price.value || 0), demand: Math.max(0, +form.demand.value || 0),
+    competition: +form.competition.value, fit: +form.fit.value, risk: +form.risk.value, note: form.note.value.trim(),
+  };
+}
+function updatePreview(){
+  const m = metrics({...readForm(), id: 'x'});
+  $('#preview').innerHTML = `
+    <span>單件毛利 <b>${money(m.unit)}</b></span>
+    <span>毛利率 <b>${pct(m.margin)}</b></span>
+    <span>預估月利潤 <b>${money(m.monthly)}</b></span>
+    <span>選品分數 <b style="color:${scoreColor(m.score)}">${m.score}</b> <span class="tag ${m.verdict[1]}">${m.verdict[0]}</span></span>
+    ${m.flags.map(f => `<span class="flag">${f}</span>`).join('')}`;
+}
+form.addEventListener('input', updatePreview);
+function openEdit(id){
+  editingId = id || null;
+  const it = id ? state.items.find(x => x.id === id) : {name:'', category:'', status:'candidate', cost:'', price:'', demand:'', competition:3, fit:3, risk:2, note:''};
+  if(!it) return;
+  $('#editTitle').textContent = id ? '編輯商品' : '新增候選';
+  for(const k of ['name','category','status','cost','price','demand','competition','fit','risk','note']) form[k].value = it[k];
+  $('#deleteBtn').hidden = !id;
+  $('#catList').innerHTML = [...new Set(state.items.map(i => i.category))].map(c => `<option value="${esc(c)}">`).join('');
+  updatePreview();
+  $('#editDlg').showModal();
+}
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const data = readForm();
+  if(editingId){ Object.assign(state.items.find(x => x.id === editingId), data); }
+  else state.items.push({...data, id: 'p' + Date.now().toString(36), pal: Math.floor(Math.random() * PALETTES.length)});
+  save(); $('#editDlg').close(); render();
+});
+$('#deleteBtn').addEventListener('click', () => {
+  if(!editingId || !confirm('確定刪除這個商品？')) return;
+  state.items = state.items.filter(x => x.id !== editingId);
+  save(); $('#editDlg').close(); render();
+});
+$('#addBtn').addEventListener('click', () => openEdit(null));
+
+/* dialogs: close buttons + backdrop */
+document.querySelectorAll('dialog').forEach(d => {
+  d.addEventListener('click', e => { if(e.target === d || e.target.closest('[data-close]')) d.close(); });
+});
+
+/* ---------- import / export / reset ---------- */
+$('#exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'select-shop-data.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('#importBtn').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; if(!f) return;
+  try{
+    const s = JSON.parse(await f.text());
+    if(!Array.isArray(s.items)) throw new Error('bad');
+    state = {items: s.items, weights: {...DEFAULT_WEIGHTS, ...(s.weights || {})}};
+    save(); renderWeights(); render();
+  }catch(err){ alert('這個檔案無法匯入，請確認是從這裡匯出的 JSON。'); }
+  e.target.value = '';
+});
+$('#resetBtn').addEventListener('click', () => {
+  if(!confirm('要清除目前資料，恢復成範例商品嗎？')) return;
+  state = {items: clone(SAMPLE), weights: {...DEFAULT_WEIGHTS}};
+  save(); renderWeights(); render();
+});
+
+function render(){ if($('#lab').hidden) renderShop(); else renderLab(); }
+renderWeights();
+route();
+})();
+</script>
+</body>
+</html>
